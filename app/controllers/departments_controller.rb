@@ -1,15 +1,18 @@
 class DepartmentsController < ApplicationController
   def index
-    @departments = Department.all.order({ :created_at => :desc })
-
-    render({ :template => "departments/index" })
+    @departments = Department.all.order({ created_at: :desc })
+    render({ template: "departments/index" })
   end
 
   def show
     the_id = params.fetch("path_id")
-    @department = Department.where({:id => the_id })
+    @department = Department.find_by(id: the_id)
 
-    render({ :template => "departments/show" })
+    if @department.nil?
+      redirect_to("/departments", { alert: "Department not found." })
+    else
+      render({ template: "departments/show" })
+    end
   end
 
   def create
@@ -18,32 +21,39 @@ class DepartmentsController < ApplicationController
 
     if @department.valid?
       @department.save
-      redirect_to("/departments", { :notice => "Department created successfully." })
+      redirect_to("/departments", { notice: "Department created successfully." })
     else
-      redirect_to("/departments", { :notice => "Department failed to create successfully." })
+      redirect_to("/departments", { alert: "Department failed to create successfully." })
     end
   end
 
   def update
     the_id = params.fetch("path_id")
-    @department = Department.where({ :id => the_id }).at(0)
+    @department = Department.find_by(id: the_id)
 
-    @department.name = params.fetch("query_name")
+    if @department
+      @department.name = params.fetch("query_name")
 
-    if @department.valid?
-      @department.save
-      redirect_to("/departments/#{@department.id}", { :notice => "Department updated successfully."} )
+      if @department.valid?
+        @department.save
+        redirect_to("/departments/#{@department.id}", { notice: "Department updated successfully." })
+      else
+        redirect_to("/departments/#{@department.id}", { alert: "Department failed to update successfully." })
+      end
     else
-      redirect_to("/departments/#{@department.id}", { :alert => "Department failed to update successfully." })
+      redirect_to("/departments", { alert: "Department not found." })
     end
   end
 
   def destroy
     the_id = params.fetch("path_id")
-    @department = Department.where({ :id => the_id }).at(0)
+    @department = Department.find_by(id: the_id)
 
-    @department.destroy
-
-    redirect_to("/departments", { :notice => "Department deleted successfully."} )
+    if @department
+      @department.destroy
+      redirect_to("/departments", { notice: "Department deleted successfully." })
+    else
+      redirect_to("/departments", { alert: "Department not found." })
+    end
   end
 end
